@@ -12,15 +12,14 @@ export default function App() {
   const [stats, setStats] = useState(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [accessCode, setAccessCode] = useState('');
-  const [authError, setAuthError] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userData, setUserData] = useState({ name: '', email: '', phone: '' });
 
   useEffect(() => {
-    // Session check
     if (localStorage.getItem('expert_session') === 'active') {
       setIsLoggedIn(true);
     }
+    // ... rest of useEffect
 
     // 1. Fetch Stats
     fetch(`${API_URL}/stats`, {
@@ -52,31 +51,30 @@ export default function App() {
     };
   }, []);
 
-  const handleLogin = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setAuthError('');
 
     try {
-      const resp = await fetch(`${API_URL}/login`, {
+      const resp = await fetch(`${API_URL}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Bypass-Tunnel-Reminder': 'true'
         },
-        body: JSON.stringify({ access_code: accessCode }),
+        body: JSON.stringify(userData),
       });
 
       if (resp.ok) {
         localStorage.setItem('expert_session', 'active');
+        localStorage.setItem('user_details', JSON.stringify(userData));
         setIsLoggedIn(true);
-        speak("Institutional access granted. Welcome to the Expert Diagnostic System.");
+        speak(`Welcome ${userData.name}. Institutional access granted to Bhavan's Expert System.`);
       } else {
-        setAuthError("Incorrect Institutional Access Code");
-        speak("Access denied. Please check your institutional code.");
+        alert("Registration failed. Please try again.");
       }
     } catch (err) {
-      setAuthError("System offline. Please check expert server.");
+      alert("System offline. Please check expert server.");
     } finally {
       setLoading(false);
     }
@@ -148,6 +146,55 @@ export default function App() {
     }
   };
 
+  if (!isLoggedIn) {
+    return (
+      <div className="login-screen animate-fade">
+        <div className="glass-card login-form">
+          <div className="college-logo-container" style={{ margin: '0 auto 2rem', width: 'fit-content' }}>
+            <img src="/logo.jpg" alt="Logo" style={{ width: '80px', height: '80px', borderRadius: '50%' }} />
+          </div>
+          <h2 style={{ color: 'var(--secondary)' }}>Institutional Portal</h2>
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-dim)', marginBottom: '1.5rem' }}>Bhavan's Vivekananda College</p>
+
+          <form onSubmit={handleRegister}>
+            <input
+              type="text"
+              className="login-input"
+              placeholder="Full Name"
+              value={userData.name}
+              onChange={(e) => setUserData({ ...userData, name: e.target.value })}
+              required
+              style={{ marginBottom: '1rem' }}
+            />
+            <input
+              type="email"
+              className="login-input"
+              placeholder="E-mail Address"
+              value={userData.email}
+              onChange={(e) => setUserData({ ...userData, email: e.target.value })}
+              required
+              style={{ marginBottom: '1rem' }}
+            />
+            <input
+              type="tel"
+              className="login-input"
+              placeholder="Phone Number"
+              value={userData.phone}
+              onChange={(e) => setUserData({ ...userData, phone: e.target.value })}
+              required
+              style={{ marginBottom: '1.5rem' }}
+            />
+            <button className="btn-primary" style={{ width: '100%' }} disabled={loading}>
+              {loading ? 'Registering...' : 'Authorize Access'}
+            </button>
+          </form>
+          <p style={{ marginTop: '2rem', fontSize: '0.7rem', color: 'var(--text-dim)', opacity: 0.5 }}>
+            Restricted System • Authorized Personnel Only
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container animate-fade">

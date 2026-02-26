@@ -37,18 +37,22 @@ def startup_event():
 
 from pydantic import BaseModel
 
-class LoginRequest(BaseModel):
-    access_code: str
+class UserRegister(BaseModel):
+    name: str
+    email: str
+    phone: str
 
-@app.post("/login")
-async def login(request: LoginRequest):
-    # Institutional Access Code (Bhavan's Vivekananda College 2024 demo)
-    # For a real app, this would be a hash in a database or tied to users
-    SECRET_CODE = "BVC_HEALTH_2024"
-    if request.access_code == SECRET_CODE:
-        return {"status": "success", "message": "Access Granted"}
-    else:
-        raise HTTPException(status_code=401, detail="Invalid Institutional Access Code")
+@app.post("/register")
+async def register(request: UserRegister, db: Session = Depends(get_db)):
+    from .models.database import UserRegistration
+    new_user = UserRegistration(
+        name=request.name,
+        email=request.email,
+        phone=request.phone
+    )
+    db.add(new_user)
+    db.commit()
+    return {"status": "success", "message": "User registered successfully"}
 
 @app.get("/")
 def read_root():

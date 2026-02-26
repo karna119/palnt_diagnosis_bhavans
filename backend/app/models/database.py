@@ -7,6 +7,15 @@ import datetime
 
 Base = declarative_base()
 
+class UserRegistration(Base):
+    __tablename__ = "user_registrations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    email = Column(String)
+    phone = Column(String)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+
 class Prediction(Base):
     __tablename__ = "predictions"
 
