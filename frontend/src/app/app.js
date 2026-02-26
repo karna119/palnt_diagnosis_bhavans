@@ -12,7 +12,7 @@ export default function App() {
   const [stats, setStats] = useState(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [accessCode, setAccessCode] = useState('');
   const [authError, setAuthError] = useState('');
 
@@ -148,37 +148,6 @@ export default function App() {
     }
   };
 
-  if (!isLoggedIn) {
-    return (
-      <div className="login-screen animate-fade">
-        <div className="glass-card login-form">
-          <div className="college-logo-container" style={{ margin: '0 auto 2rem', width: 'fit-content' }}>
-            <img src="/logo.jpg" alt="Logo" style={{ width: '80px', height: '80px', borderRadius: '50%' }} />
-          </div>
-          <h2 style={{ color: 'var(--secondary)' }}>Institutional Portal</h2>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-dim)', marginBottom: '1.5rem' }}>Bhavan's Vivekananda College</p>
-
-          <form onSubmit={handleLogin}>
-            <input
-              type="password"
-              className="login-input"
-              placeholder="Enter Access Code"
-              value={accessCode}
-              onChange={(e) => setAccessCode(e.target.value)}
-              required
-            />
-            {authError && <p className="error-msg">{authError}</p>}
-            <button className="btn-primary" style={{ width: '100%' }} disabled={loading}>
-              {loading ? 'Verifying...' : 'Authorize Access'}
-            </button>
-          </form>
-          <p style={{ marginTop: '2rem', fontSize: '0.7rem', color: 'var(--text-dim)', opacity: 0.5 }}>
-            Restricted System • Authorized Personnel Only
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container animate-fade">
