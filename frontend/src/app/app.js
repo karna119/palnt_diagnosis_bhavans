@@ -11,7 +11,11 @@ export default function App() {
 
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    fetch(`${apiUrl}/stats`)
+    fetch(`${apiUrl}/stats`, {
+      headers: {
+        'Bypass-Tunnel-Reminder': 'true'
+      }
+    })
       .then(res => res.json())
       .then(data => setStats(data))
       .catch(err => console.error(err));
@@ -36,6 +40,9 @@ export default function App() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       const resp = await fetch(`${apiUrl}/predict`, {
         method: 'POST',
+        headers: {
+          'Bypass-Tunnel-Reminder': 'true'
+        },
         body: formData,
       });
       const data = await resp.json();
