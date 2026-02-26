@@ -35,6 +35,21 @@ def startup_event():
     if not os.path.exists("uploads"):
         os.makedirs("uploads")
 
+from pydantic import BaseModel
+
+class LoginRequest(BaseModel):
+    access_code: str
+
+@app.post("/login")
+async def login(request: LoginRequest):
+    # Institutional Access Code (Bhavan's Vivekananda College 2024 demo)
+    # For a real app, this would be a hash in a database or tied to users
+    SECRET_CODE = "BVC_HEALTH_2024"
+    if request.access_code == SECRET_CODE:
+        return {"status": "success", "message": "Access Granted"}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid Institutional Access Code")
+
 @app.get("/")
 def read_root():
     return {"message": "Bhavan's Plant Health Detection System API is running."}
