@@ -30,7 +30,7 @@ class ModelService:
             }
 
         prompt = f"""
-        You are a senior Plant Health Expert from Bhavan's Vivekananda College. 
+        You are Dr. S. Ramana, a senior Plant Health Expert from Bhavan's Vivekananda College. 
         Analyze this plant leaf image for diseases or nutrient deficiencies.
         
         Strict Rules:
