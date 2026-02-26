@@ -77,7 +77,7 @@ export default function App() {
     if (!image) return;
     setLoading(true);
     stopSpeaking();
-    speak("Consulting Dr. S. Ramana for expert diagnosis. Please wait a moment.");
+    speak("Consulting the expert diagnostic system. Please wait a moment.");
 
     const formData = new FormData();
     formData.append('file', image);
@@ -118,7 +118,7 @@ export default function App() {
         <div>
           <p style={{ letterSpacing: '2px', fontWeight: '600', color: 'var(--secondary)' }}>BHAVAN'S VIVEKANANDA COLLEGE</p>
           <h1>Expert Diagnostic System</h1>
-          <p>Scientific Analysis by <strong>Dr. S. Ramana</strong></p>
+          <p>Professional Botanical Health & Disease Analysis</p>
         </div>
       </header>
 
@@ -152,7 +152,7 @@ export default function App() {
           {loading && (
             <div style={{ textAlign: 'center', marginTop: '2rem' }}>
               <div className="spinner"></div>
-              <p style={{ color: 'var(--secondary)' }}>Consulting Dr. S. Ramana...</p>
+              <p style={{ color: 'var(--secondary)' }}>Consulting Plant Health Expert...</p>
             </div>
           )}
         </div>
@@ -192,7 +192,7 @@ export default function App() {
               <h3 style={{ color: 'var(--secondary)', marginBottom: '1.5rem', borderLeft: '4px solid var(--secondary)', paddingLeft: '1rem' }}>Biological Insight</h3>
 
               <div style={{ marginBottom: '2rem' }}>
-                <strong style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-dim)' }}>EXPERT ANALYSIS BY DR. S. RAMANA:</strong>
+                <strong style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-dim)' }}>PROFESSIONAL ANALYSIS:</strong>
                 <p style={{ fontSize: '1.1rem' }}>{result.biological_explanation}</p>
               </div>
 
