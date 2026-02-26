@@ -1,0 +1,14 @@
+{
+    "name": "bhavans-plant-ai-root",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "dev": "npm run dev --prefix frontend",
+        "build": "npm run build --prefix frontend",
+        "install": "npm install --prefix frontend",
+        "start": "npm run start --prefix frontend"
+    },
+    "dependencies": {
+        "next": "14.0.3"
+    }
+}
