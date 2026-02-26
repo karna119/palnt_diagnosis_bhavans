@@ -16,7 +16,9 @@ export default function App() {
   const [userData, setUserData] = useState({ name: '', email: '', phone: '' });
 
   useEffect(() => {
-    if (localStorage.getItem('expert_session') === 'active') {
+    const sessionActive = localStorage.getItem('expert_session') === 'active';
+    const hasUserDetails = localStorage.getItem('user_details');
+    if (sessionActive && hasUserDetails) {
       setIsLoggedIn(true);
     }
     // ... rest of useEffect
