@@ -10,7 +10,8 @@ export default function App() {
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:8000/stats')
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    fetch(`${apiUrl}/stats`)
       .then(res => res.json())
       .then(data => setStats(data))
       .catch(err => console.error(err));
@@ -32,7 +33,8 @@ export default function App() {
     formData.append('file', image);
 
     try {
-      const resp = await fetch('http://localhost:8000/predict', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const resp = await fetch(`${apiUrl}/predict`, {
         method: 'POST',
         body: formData,
       });
