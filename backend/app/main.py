@@ -43,47 +43,47 @@ def read_root():
 async def predict(file: UploadFile = File(...), db: Session = Depends(get_db)):
     try:
         # Save file
+        file_content = await file.read()
         file_path = os.path.join("uploads", file.filename)
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            buffer.write(file_content)
         
-        # Preprocess
-        with open(file_path, "rb") as f:
-            image_bytes = f.read()
+        # Inference using LLM (Gemini Pro Vision)
+        llm_result = await model_service.predict_with_llm(file_content)
         
-        image_array = preprocess_image(image_bytes)
+        predicted_class = llm_result.get("predicted_class", "Unknown")
+        confidence = llm_result.get("confidence", 0.95)
+        analysis = llm_result.get("analysis", "")
         
-        # Inference
-        predicted_class, confidence = model_service.predict(image_array)
-        
-        # Get explanation
+        # Get local explanation (fallback/enrichment)
         explanation = EXPLANATIONS.get(predicted_class, {})
         
         # Save to DB
         new_prediction = Prediction(
             filename=file.filename,
-            plant_name=predicted_class.split("___")[0].replace("_", " "),
-            predicted_disease=predicted_class.split("___")[1].replace("_", " "),
-            category=explanation.get("category", "Unknown"),
+            plant_name=predicted_class.split("___")[0].replace("_", " ") if "___" in predicted_class else "Plant",
+            predicted_disease=predicted_class.split("___")[1].replace("_", " ") if "___" in predicted_class else "Condition",
+            category=explanation.get("category", "Consult AI Expert"),
             confidence_score=confidence
         )
         db.add(new_prediction)
         db.commit()
         
-        # Response format as requested
+        # Response format
         return {
             "plant_name": new_prediction.plant_name,
             "predicted_disease": new_prediction.predicted_disease,
             "category": new_prediction.category,
             "confidence_score": format_confidence(confidence),
-            "biological_explanation": explanation.get("scientific_reason", ""),
+            "biological_explanation": analysis or explanation.get("scientific_reason", ""),
             "precaution": explanation.get("precaution", ""),
-            "recommended_action": explanation.get("recommended_action", ""),
+            "recommended_action": llm_result.get("recommendation") or explanation.get("recommended_action", ""),
             "symptoms": explanation.get("symptoms", ""),
             "nutrient_correction": explanation.get("nutrient_correction", "")
         }
         
     except Exception as e:
+        print(f"Prediction Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/stats")

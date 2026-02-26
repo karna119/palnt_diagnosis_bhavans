@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState, useEffect } from 'react';
 
@@ -8,18 +7,36 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [stats, setStats] = useState(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     fetch(`${apiUrl}/stats`, {
-      headers: {
-        'Bypass-Tunnel-Reminder': 'true'
-      }
+      headers: { 'Bypass-Tunnel-Reminder': 'true' }
     })
       .then(res => res.json())
       .then(data => setStats(data))
       .catch(err => console.error(err));
   }, []);
+
+  const speak = (text) => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const stopSpeaking = () => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -27,12 +44,17 @@ export default function App() {
       setImage(file);
       setPreview(URL.createObjectURL(file));
       setResult(null);
+      stopSpeaking();
+      speak("Image received. Ready for expert analysis.");
     }
   };
 
   const handleUpload = async () => {
     if (!image) return;
     setLoading(true);
+    stopSpeaking();
+    speak("Consulting the expert diagnostic system. Please wait a moment.");
+
     const formData = new FormData();
     formData.append('file', image);
 
@@ -40,33 +62,39 @@ export default function App() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       const resp = await fetch(`${apiUrl}/predict`, {
         method: 'POST',
-        headers: {
-          'Bypass-Tunnel-Reminder': 'true'
-        },
+        headers: { 'Bypass-Tunnel-Reminder': 'true' },
         body: formData,
       });
       const data = await resp.json();
       setResult(data);
+
+      // Auto-speak the diagnosis
+      const speechText = `Diagnosis complete. We have identified ${data.predicted_disease} in the ${data.plant_name}. ${data.biological_explanation}. The recommended action is: ${data.recommended_action}`;
+      speak(speechText);
+
     } catch (err) {
-      alert("Error connecting to backend");
+      alert("System connection error. Please verify the expert server is active.");
+      speak("I encountered an error connecting to the diagnostic server.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container">
-      <header className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem' }}>
-        <img src="/logo.jpg" alt="Bhavan's College Logo" style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'contain', background: 'white' }} />
-        <div style={{ textAlign: 'left' }}>
-          <div className="college-name" style={{ margin: 0 }}>BHAVAN'S VIVEKANANDA COLLEGE</div>
-          <h1 className="logo" style={{ margin: '0.2rem 0' }}>AI Plant Health Detection</h1>
-          <p style={{ margin: 0 }}>Empowering Agriculture with Precision Artificial Intelligence</p>
+    <div className="container animate-fade">
+      <header className="glass-card">
+        <div className="college-logo-container">
+          <img src="/logo.jpg" alt="Bhavan's College Logo" style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'contain' }} />
+        </div>
+        <div>
+          <p style={{ letterSpacing: '2px', fontWeight: '600', color: 'var(--secondary)' }}>BHAVAN'S VIVEKANANDA COLLEGE</p>
+          <h1>Expert Diagnostic System</h1>
+          <p>Professional Botanical Health & Disease Analysis</p>
         </div>
       </header>
 
       <main>
-        <div className="prediction-section glass-card" style={{ padding: '2rem' }}>
+        <div className="glass-card" style={{ padding: '2.5rem' }}>
           <div className="upload-zone" onClick={() => document.getElementById('fileInput').click()}>
             <input
               type="file"
@@ -76,102 +104,97 @@ export default function App() {
               accept="image/*"
             />
             {preview ? (
-              <img src={preview} alt="Preview" style={{ maxWidth: '100%', borderRadius: '10px', maxHeight: '300px' }} />
+              <img src={preview} alt="Preview" style={{ maxWidth: '100%', borderRadius: '15px', maxHeight: '400px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }} />
             ) : (
               <div>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🍃</div>
-                <h3>Upload Plant Leaf Image</h3>
-                <p>Drag and drop or click to browse</p>
+                <div style={{ fontSize: '4rem', marginBottom: '1.5rem', animation: 'pulse 2s infinite' }}>🌿</div>
+                <h3>Diagnostic Submissions</h3>
+                <p>Upload a clear leaf sample for analysis</p>
               </div>
             )}
           </div>
 
           {image && !loading && !result && (
-            <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-              <button className="btn-primary" onClick={handleUpload}>Analyze Health Status</button>
+            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+              <button className="btn-primary" onClick={handleUpload}>Run Health Diagnosis</button>
             </div>
           )}
 
           {loading && (
-            <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-              <div className="spinner">Analyzing Image (Xception Model v1.0)...</div>
+            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+              <div className="spinner"></div>
+              <p style={{ color: var(--secondary) }}>Consulting Plant Health Expert...</p>
             </div>
           )}
-
-          {result && result.detail && (
-            <div className="glass-card" style={{ padding: '1.5rem', marginTop: '1rem', border: '1px solid #ffcdd2', background: '#ffebee' }}>
-              <h3 style={{ color: '#c62828' }}>Analysis Error</h3>
-              <p style={{ color: '#b71c1c' }}>{result.detail}</p>
-              <button className="btn-primary" style={{ marginTop: '1rem', background: '#c62828' }} onClick={() => setResult(null)}>Try Again</button>
-            </div>
-          )}
-
-          {result && !result.detail && (
-            <div className="prediction-results">
-              <div className="glass-card" style={{ padding: '1.5rem' }}>
-                <span className={`badge badge-${(result.category || 'unknown').toLowerCase()}`}>{result.category || 'Unknown'}</span>
-                <h2 style={{ marginTop: '0.5rem', color: 'var(--primary)' }}>{result.plant_name}</h2>
-                <h3 style={{ color: 'var(--text-muted)' }}>{result.predicted_disease}</h3>
-
-                <div style={{ marginTop: '1.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Confidence Score</span>
-                    <span style={{ fontWeight: 'bold' }}>{result.confidence_score}</span>
-                  </div>
-                  <div className="confidence-bar">
-                    <div className="confidence-fill" style={{ width: result.confidence_score }}></div>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: '1.5rem' }}>
-                  <h4>Symptoms</h4>
-                  <p style={{ fontSize: '0.9rem' }}>{result.symptoms}</p>
-                </div>
-              </div>
-
-              <div className="glass-card" style={{ padding: '1.5rem' }}>
-                <h3 style={{ borderBottom: '2px solid var(--accent)', paddingBottom: '0.5rem' }}>Biological Insight</h3>
-
-                <div style={{ marginTop: '1rem' }}>
-                  <strong>Scientific Reason:</strong>
-                  <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>{result.biological_explanation}</p>
-                </div>
-
-                <div style={{ marginTop: '1.5rem', background: '#fff3e0', padding: '1rem', borderRadius: '10px' }}>
-                  <strong style={{ color: '#e65100' }}>⚠️ Recommended Action:</strong>
-                  <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>{result.recommended_action}</p>
-                </div>
-
-                <div style={{ marginTop: '1rem' }}>
-                  <strong>Precaution:</strong>
-                  <p style={{ fontSize: '0.9rem' }}>{result.precaution}</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {stats && (
-          <section style={{ marginTop: '3rem' }}>
-            <h2 style={{ marginBottom: '1rem' }}>System Dashboard</h2>
-            <div className="prediction-results">
-              <div className="glass-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-                <h3>{stats.total_predictions}</h3>
-                <p>Total AI Diagnostics</p>
-              </div>
-              <div className="glass-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-                <h3>{stats.model_accuracy}</h3>
-                <p>Inference Accuracy</p>
-              </div>
-            </div>
-          </section>
-        )}
-      </main>
-
-      <footer style={{ marginTop: '5rem', textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-        <p>© 2026 Bhavan's Vivekananda College - Department of Computer Science & Biotechnology</p>
-        <p style={{ fontSize: '0.8rem' }}>AI Plant Health System Project | Version 1.0.0 (Production Ready)</p>
-      </footer>
     </div>
+
+        {
+    result && (
+          <div className="animate-fade">
+            <div className="glass-card" style={{ padding: '2.5rem', marginBottom: '2rem' }}>
+              <div className="result-header">
+                <div>
+                  <div className="badge">{result.category}</div>
+                  <h2 style={{ fontSize: '2rem', marginTop: '0.5rem' }}>{result.predicted_disease}</h2>
+                  <p style={{ fontSize: '1.2rem', color: 'var(--accent)' }}>Detected in {result.plant_name}</p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.8rem', color: var(--text-dim) }}>CONFIDENCE SCORE</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '800', color: var(--secondary) }}>{result.confidence_score}</div>
+                </div>
+              </div>
+              
+              <div className="confidence-bar">
+                <div className="confidence-fill" style={{ width: result.confidence_score }}></div>
+              </div>
+
+              <div className="tts-controls">
+                <button className="tts-btn" onClick={() => speak(`Diagnosis: ${result.predicted_disease}. ${result.biological_explanation}`)}>
+                  <span>🔊</span> Re-play Diagnosis
+                </button>
+                {isSpeaking && (
+                  <button className="tts-btn" onClick={stopSpeaking} style={{ color: '#ff4444', borderColor: '#ff4444' }}>
+                    <span>⏹️</span> Stop Audio
+                  </button>
+                )}
+              </div>
+            </div >
+
+            <div className="glass-card" style={{ padding: '2.5rem' }}>
+              <h3 style={{ color: 'var(--secondary)', marginBottom: '1.5rem', borderLeft: '4px solid var(--secondary)', paddingLeft: '1rem' }}>Biological Insight</h3>
+              
+              <div style={{ marginBottom: '2rem' }}>
+                <strong style={{ display: 'block', marginBottom: '0.5rem', color: var(--text-dim) }}>PROFESSIONAL ANALYSIS:</strong>
+                <p style={{ fontSize: '1.1rem' }}>{result.biological_explanation}</p>
+              </div>
+
+              <div style={{ background: 'rgba(197, 160, 89, 0.1)', padding: '1.5rem', borderRadius: '15px', border: '1px solid rgba(197, 160, 89, 0.2)' }}>
+                <strong style={{ color: var(--secondary), display: 'block', marginBottom: '0.5rem' }}>📜 RECOMMENDED ACTION:</strong>
+                <p style={{ fontSize: '1rem' }}>{result.recommended_action}</p>
+              </div >
+            </div >
+          </div >
+        )
+  }
+      </main >
+
+    { stats && (
+      <footer style={{ marginTop: '4rem', textAlign: 'center', opacity: 0.6 }}>
+        <div className="glass-card" style={{ display: 'inline-flex', gap: '3rem', padding: '1rem 3rem', borderRadius: '50px' }}>
+          <div><strong>{stats.total_predictions}</strong> Reports Generated</div>
+          <div><strong>{stats.top_plant}</strong> Top Subject</div>
+        </div>
+      </footer>
+    )
+}
+
+<style jsx>{`
+        @keyframes pulse {
+          0% { transform: scale(1); opacity: 0.8; }
+          50% { transform: scale(1.1); opacity: 1; }
+          100% { transform: scale(1); opacity: 0.8; }
+        }
+      `}</style>
+    </div >
   );
 }
