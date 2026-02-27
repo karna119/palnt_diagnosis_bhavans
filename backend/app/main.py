@@ -31,6 +31,15 @@ def get_db():
 
 @app.on_event("startup")
 def startup_event():
+    # Ensure database directory exists
+    db_url = os.getenv("DATABASE_URL", "sqlite:///./plant_health.db")
+    if db_url.startswith("sqlite:///"):
+        db_path = db_url.replace("sqlite:///", "")
+        db_dir = os.path.dirname(db_path)
+        if db_dir and not os.path.exists(db_dir):
+            os.makedirs(db_dir)
+            print(f"Created database directory: {db_dir}")
+            
     init_db()
     uploads_dir = os.getenv("UPLOADS_PATH", "uploads")
     if not os.path.exists(uploads_dir):
