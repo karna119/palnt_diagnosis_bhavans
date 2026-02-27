@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from './lib/supabase';
 import { openai, DIAGNOSIS_PROMPT } from './lib/openai';
 import {
   Leaf,
@@ -38,30 +37,20 @@ export default function App() {
   const [userData, setUserData] = useState<UserData>({ name: '', email: '', phone: '' });
 
   useEffect(() => {
-    const checkSession = async () => {
-      // Check for local session first to support "ignore main login"
-      const storedSession = localStorage.getItem('expert_session');
-      const storedUser = localStorage.getItem('user_details');
+    // Check for local session
+    const storedSession = localStorage.getItem('expert_session');
+    const storedUser = localStorage.getItem('user_details');
 
-      if (storedSession === 'active' && storedUser) {
-        setIsLoggedIn(true);
-        setUserData(JSON.parse(storedUser));
-      } else if (supabase) {
-        // Fallback to Supabase if local session isn't found
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          setIsLoggedIn(true);
-          if (storedUser) setUserData(JSON.parse(storedUser));
-        }
-      }
-    };
-    checkSession();
-    if (supabase) fetchStats();
+    if (storedSession === 'active' && storedUser) {
+      setIsLoggedIn(true);
+      setUserData(JSON.parse(storedUser));
+    }
+
+    loadStats();
 
     // Security Deterrents (Disable Inspect/Right-Click)
     const handleContextMenu = (e: MouseEvent) => e.preventDefault();
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+U
       if (
         e.keyCode === 123 || // F12
         (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || // Ctrl+Shift+I/J/C
@@ -80,38 +69,36 @@ export default function App() {
     };
   }, []);
 
-  const fetchStats = async () => {
-    if (!supabase) return;
-    try {
-      const { count, error } = await supabase
-        .from('predictions')
-        .select('*', { count: 'exact', head: true });
-
-      if (error) throw error;
-
-      // In a real app, we'd query for the top plant. For now, mock it or leave simple.
-      setStats({ total: count || 0, topPlant: 'Tomato' });
-    } catch (err) {
-      console.error("Stats error:", err);
+  const loadStats = () => {
+    const historicalStats = localStorage.getItem('local_stats');
+    if (historicalStats) {
+      setStats(JSON.parse(historicalStats));
+    } else {
+      setStats({ total: 124, topPlant: 'Tomato' }); // Default placeholder stats
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const updateStats = () => {
+    const newStats = {
+      total: (stats?.total || 124) + 1,
+      topPlant: result?.plant_name || stats?.topPlant || 'Tomato'
+    };
+    setStats(newStats);
+    localStorage.setItem('local_stats', JSON.stringify(newStats));
+  };
+
+  const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    try {
-      // Per request: "ignore main login authentication"
-      // We will skip Supabase Auth and just establish a local session
+    // Dummy Login: No authentication check, just establishment of local session
+    setTimeout(() => {
       localStorage.setItem('user_details', JSON.stringify(userData));
       localStorage.setItem('expert_session', 'active');
       setIsLoggedIn(true);
-      speak(`Welcome ${userData.name}. Institutional access granted to Bhavan's Expert System.`);
-    } catch (err: any) {
-      alert(`Access error: ${err.message}`);
-    } finally {
       setLoading(false);
-    }
+      speak(`Welcome ${userData.name}. Institutional access granted to Bhavan's Expert System.`);
+    }, 800);
   };
 
   const speak = (text: string) => {
@@ -147,7 +134,6 @@ export default function App() {
     speak("Consulting the expert diagnostic system. Please wait a moment.");
 
     try {
-      // Convert image to base64 for OpenAI
       const reader = new FileReader();
       reader.readAsDataURL(image);
       reader.onload = async () => {
@@ -156,19 +142,14 @@ export default function App() {
         const response = await openai.chat.completions.create({
           model: "gpt-4o",
           messages: [
-            {
-              role: "system",
-              content: DIAGNOSIS_PROMPT
-            },
+            { role: "system", content: DIAGNOSIS_PROMPT },
             {
               role: "user",
               content: [
                 { type: "text", text: "Analyze this plant leaf image." },
                 {
                   type: "image_url",
-                  image_url: {
-                    url: `data:image/jpeg;base64,${base64Image}`
-                  }
+                  image_url: { url: `data:image/jpeg;base64,${base64Image}` }
                 }
               ]
             }
@@ -180,21 +161,7 @@ export default function App() {
         if (content) {
           const data = JSON.parse(content) as Prediction;
           setResult(data);
-
-          // Save to Supabase
-          if (supabase) {
-            await supabase.from('predictions').insert([
-              {
-                plant_name: data.plant_name,
-                predicted_disease: data.predicted_disease,
-                category: data.category,
-                confidence_score: data.confidence_score,
-                user_email: userData.email
-              }
-            ]);
-            fetchStats();
-          }
-
+          updateStats();
           speak(`Diagnosis complete. Identified ${data.predicted_disease} in ${data.plant_name}. ${data.biological_explanation}`);
         }
       };
@@ -206,16 +173,13 @@ export default function App() {
     }
   };
 
-  const handleLogout = async () => {
-    if (supabase) await supabase.auth.signOut();
+  const handleLogout = () => {
     localStorage.removeItem('user_details');
     localStorage.removeItem('expert_session');
     setIsLoggedIn(false);
     speak("Expert session terminated.");
   };
 
-  // Skip configuration check for Supabase to allow login/UI exploration even without keys
-  // Only OpenAI is strictly needed for the core "Predict" feature
   const isMisconfigured = !openai;
 
   if (isMisconfigured) {
@@ -225,14 +189,10 @@ export default function App() {
           <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>⚠️</div>
           <h2 style={{ color: '#ff4444' }}>Configuration Required</h2>
           <p style={{ color: 'var(--text-dim)', marginBottom: '2rem' }}>
-            The system is missing necessary API keys. Please configure <strong>.env</strong> with valid Supabase and OpenAI credentials.
+            The system is missing the OpenAI API key.
           </p>
           <div style={{ textAlign: 'left', fontSize: '0.8rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', color: 'var(--accent)' }}>
-            <code>
-              VITE_SUPABASE_URL=...<br />
-              VITE_SUPABASE_ANON_KEY=...<br />
-              VITE_OPENAI_API_KEY=...
-            </code>
+            <code>VITE_OPENAI_API_KEY=your_key_here</code>
           </div>
           <button className="btn-primary" style={{ width: '100%', marginTop: '2rem' }} onClick={() => window.location.reload()}>
             Retry After Configuring
@@ -286,7 +246,7 @@ export default function App() {
           </form>
           <div style={{ marginTop: '2.5rem', opacity: 0.4 }}>
             <p style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Secure Gateway • Institutional Protocol v3.0 (React 19)
+              Secure Gateway • Institutional Protocol v4.0 (Autonomous)
             </p>
           </div>
         </div>
