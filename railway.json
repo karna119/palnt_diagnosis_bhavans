@@ -1,5 +1,4 @@
 {
-    "$schema": "https://raw.githubusercontent.com/railwayapp/railway-json-schema/refs/heads/main/schema.json",
     "services": {
         "backend": {
             "name": "plant-diagnosis-backend",
