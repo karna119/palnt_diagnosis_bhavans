@@ -1,19 +1,26 @@
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-import { NextResponse } from 'next/server';
 
 export async function POST(request) {
     try {
         const body = await request.json();
-        return NextResponse.json({
+        return new Response(JSON.stringify({
             status: 'success',
             message: 'Registration authorized',
-            echo: body.name
+            expert: body.name
+        }), {
+            headers: { 'Content-Type': 'application/json' }
         });
     } catch (e) {
-        return NextResponse.json({ status: 'error', message: 'Invalid payload' }, { status: 400 });
+        return new Response(JSON.stringify({ status: 'error', message: 'Invalid payload' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 }
 
 export async function GET() {
-    return NextResponse.json({ message: 'Register endpoint is active. Use POST for registration.' });
+    return new Response(JSON.stringify({ message: "Register active" }), {
+        headers: { 'Content-Type': 'application/json' }
+    });
 }
