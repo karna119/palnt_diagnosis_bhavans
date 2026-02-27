@@ -19,6 +19,11 @@
             "name": "plant-diagnosis-frontend",
             "source": {
                 "root": "frontend"
+            },
+            "deploy": {
+                "healthcheckPath": "/",
+                "healthcheckTimeout": 120,
+                "restartPolicyType": "ON_FAILURE"
             }
         }
     }
