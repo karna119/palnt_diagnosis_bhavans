@@ -166,7 +166,7 @@ export default function App() {
         }
       };
     } catch (err: any) {
-      alert(`System error: ${err.message}`);
+      console.error(`System error: ${err.message}`);
       speak("Expert analysis failed.");
     } finally {
       setLoading(false);
