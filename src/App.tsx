@@ -180,27 +180,6 @@ export default function App() {
     speak("Expert session terminated.");
   };
 
-  const isMisconfigured = !openai;
-
-  if (isMisconfigured) {
-    return (
-      <div className="login-screen animate-fade">
-        <div className="glass-card login-form" style={{ borderColor: '#ff4444' }}>
-          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>⚠️</div>
-          <h2 style={{ color: '#ff4444' }}>Configuration Required</h2>
-          <p style={{ color: 'var(--text-dim)', marginBottom: '2rem' }}>
-            The system is missing the OpenAI API key.
-          </p>
-          <div style={{ textAlign: 'left', fontSize: '0.8rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', color: 'var(--accent)' }}>
-            <code>VITE_OPENAI_API_KEY=your_key_here</code>
-          </div>
-          <button className="btn-primary" style={{ width: '100%', marginTop: '2rem' }} onClick={() => window.location.reload()}>
-            Retry After Configuring
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   if (!isLoggedIn) {
     return (
@@ -275,6 +254,14 @@ export default function App() {
       </header>
 
       <main>
+        {!openai && (
+          <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '2rem', borderColor: '#ff4444', background: 'rgba(255, 68, 68, 0.05)' }}>
+            <h3 style={{ color: '#ff4444', marginBottom: '0.5rem' }}>⚠️ Configuration Required</h3>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-dim)' }}>
+              Diagnosis features are disabled. Please set <strong>VITE_OPENAI_API_KEY</strong> in your .env file to enable expert analysis.
+            </p>
+          </div>
+        )}
         <div className="glass-card" style={{ padding: '2.5rem' }}>
           <div className="upload-zone" onClick={() => document.getElementById('fileInput')?.click()}>
             <input type="file" id="fileInput" hidden onChange={handleImageChange} accept="image/*" />
