@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 // STABLE TUNNEL BRIDGE
 // STABLE TUNNEL BRIDGE
 // STABLE TUNNEL BRIDGE
-const API_URL = '/diag-api';
+const API_URL = '/api';
 
 export default function App() {
   const [image, setImage] = useState(null);
