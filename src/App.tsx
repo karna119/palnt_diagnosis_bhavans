@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { openai, DIAGNOSIS_PROMPT } from './lib/openai';
 import {
   Leaf,
-  Lock,
   Volume2,
   Square,
   ShieldCheck,
@@ -20,12 +19,6 @@ interface Prediction {
   recommended_action: string;
 }
 
-interface UserData {
-  name: string;
-  email: string;
-  phone: string;
-}
-
 export default function App() {
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -33,19 +26,8 @@ export default function App() {
   const [result, setResult] = useState<Prediction | null>(null);
   const [stats, setStats] = useState<{ total: number; topPlant: string } | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userData, setUserData] = useState<UserData>({ name: '', email: '', phone: '' });
 
   useEffect(() => {
-    // Check for local session
-    const storedSession = localStorage.getItem('expert_session');
-    const storedUser = localStorage.getItem('user_details');
-
-    if (storedSession === 'active' && storedUser) {
-      setIsLoggedIn(true);
-      setUserData(JSON.parse(storedUser));
-    }
-
     loadStats();
 
     // Security Deterrents (Disable Inspect/Right-Click)
@@ -74,7 +56,7 @@ export default function App() {
     if (historicalStats) {
       setStats(JSON.parse(historicalStats));
     } else {
-      setStats({ total: 124, topPlant: 'Tomato' }); // Default placeholder stats
+      setStats({ total: 124, topPlant: 'Tomato' });
     }
   };
 
@@ -85,20 +67,6 @@ export default function App() {
     };
     setStats(newStats);
     localStorage.setItem('local_stats', JSON.stringify(newStats));
-  };
-
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    // Dummy Login: No authentication check, just establishment of local session
-    setTimeout(() => {
-      localStorage.setItem('user_details', JSON.stringify(userData));
-      localStorage.setItem('expert_session', 'active');
-      setIsLoggedIn(true);
-      setLoading(false);
-      speak(`Welcome ${userData.name}. Institutional access granted to Bhavan's Expert System.`);
-    }, 800);
   };
 
   const speak = (text: string) => {
@@ -173,66 +141,6 @@ export default function App() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('user_details');
-    localStorage.removeItem('expert_session');
-    setIsLoggedIn(false);
-    speak("Expert session terminated.");
-  };
-
-
-  if (!isLoggedIn) {
-    return (
-      <div className="login-screen animate-fade">
-        <div className="glass-card login-form">
-          <div className="college-logo-container" style={{ margin: '0 auto 1.5rem', width: '100px', height: '100px' }}>
-            <img src="/logo.jpg" alt="Logo" style={{ width: '100%', borderRadius: '50%' }} />
-          </div>
-          <p style={{ letterSpacing: '2px', fontWeight: '800', color: 'var(--secondary)', fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-            Bhavan's Vivekananda College
-          </p>
-          <h2>Expert Diagnostic Portal</h2>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-dim)', marginBottom: '2.5rem' }}>Authorized Botanical Research Access</p>
-
-          <form onSubmit={handleRegister}>
-            <input
-              type="text"
-              className="login-input"
-              placeholder="Expert Name"
-              value={userData.name}
-              onChange={(e) => setUserData({ ...userData, name: e.target.value })}
-              required
-            />
-            <input
-              type="email"
-              className="login-input"
-              placeholder="Institutional Email"
-              value={userData.email}
-              onChange={(e) => setUserData({ ...userData, email: e.target.value })}
-              required
-            />
-            <input
-              type="tel"
-              className="login-input"
-              placeholder="Registry Phone Number"
-              value={userData.phone}
-              onChange={(e) => setUserData({ ...userData, phone: e.target.value })}
-              required
-            />
-            <button className="btn-primary" style={{ width: '100%', marginTop: '1rem' }} disabled={loading}>
-              {loading ? 'Authenticating...' : 'Authorize Access'}
-            </button>
-          </form>
-          <div style={{ marginTop: '2.5rem', opacity: 0.4 }}>
-            <p style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Secure Gateway • Institutional Protocol v4.0 (Autonomous)
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="container animate-fade">
       <header className="glass-card">
@@ -246,9 +154,6 @@ export default function App() {
               <h1>Expert Diagnostic System</h1>
               <p>Professional Botanical Health & Disease Analysis</p>
             </div>
-            <button onClick={handleLogout} className="tts-btn" style={{ color: '#ff6666' }}>
-              <Lock size={16} /> Logout
-            </button>
           </div>
         </div>
       </header>
@@ -258,7 +163,7 @@ export default function App() {
           <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '2rem', borderColor: '#ff4444', background: 'rgba(255, 68, 68, 0.05)' }}>
             <h3 style={{ color: '#ff4444', marginBottom: '0.5rem' }}>⚠️ Configuration Required</h3>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-dim)' }}>
-              Diagnosis features are disabled. Please set <strong>VITE_OPENAI_API_KEY</strong> in your .env file to enable expert analysis.
+              Diagnosis features are disabled. Please set <strong>VITE_OPENAI_API_KEY</strong> in your environment to enable expert analysis.
             </p>
           </div>
         )}
