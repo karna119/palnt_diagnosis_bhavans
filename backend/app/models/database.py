@@ -1,9 +1,9 @@
-
+import os
+import datetime
 from sqlalchemy import Column, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-import datetime
 
 Base = declarative_base()
 
@@ -42,3 +42,8 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+
+# Proactive initialization for serverless
+if os.environ.get("VERCEL"):
+    print("Vercel detected: Proactively initializing database...")
+    init_db()

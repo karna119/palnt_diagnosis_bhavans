@@ -56,8 +56,9 @@ def startup_event():
     except Exception as e:
         print(f"DATABASE INITIALIZATION ERROR: {e}")
         print("Continuing startup anyway (service will run but DB might fail)...")
-        
-    uploads_dir = os.getenv("UPLOADS_PATH", "uploads")
+    # VERCEL FIX: Use /tmp for uploads as the root is read-only
+    default_uploads = "/tmp/uploads" if os.environ.get("VERCEL") else "uploads"
+    uploads_dir = os.getenv("UPLOADS_PATH", default_uploads)
     if not os.path.exists(uploads_dir):
         os.makedirs(uploads_dir)
         print(f"Created uploads directory: {uploads_dir}")
