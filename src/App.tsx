@@ -214,7 +214,7 @@ export default function App() {
           </form>
           <div style={{ marginTop: '2.5rem', opacity: 0.4 }}>
             <p style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Secure Gateway • Institutional Protocol v4.0 (Autonomous)
+              Secure Gateway • Institutional Protocol v4.1 (Autonomous) • Updated: 12:30 PM
             </p>
           </div>
         </div>
