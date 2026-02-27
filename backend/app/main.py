@@ -20,6 +20,14 @@ from app.models.model_service import model_service
 from app.utils.image_processor import format_confidence
 from app.explanations.engine import EXPLANATIONS
 
+# Global paths
+def get_uploads_dir():
+    if os.environ.get("VERCEL"):
+        return "/tmp/uploads"
+    return os.getenv("UPLOADS_PATH", "uploads")
+
+UPLOADS_DIR = get_uploads_dir()
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Ensure database and uploads exist
@@ -27,10 +35,9 @@ async def lifespan(app: FastAPI):
     try:
         init_db()
         
-        uploads_dir = os.getenv("UPLOADS_PATH", "uploads")
-        if not os.path.exists(uploads_dir):
-            os.makedirs(uploads_dir)
-            print(f"Verified uploads directory: {uploads_dir}")
+        if not os.path.exists(UPLOADS_DIR):
+            os.makedirs(UPLOADS_DIR)
+            print(f"Verified uploads directory: {UPLOADS_DIR}")
     except Exception as e:
         print(f"FASTAPI STARTUP ERROR: {e}")
     
@@ -106,11 +113,10 @@ async def predict(file: UploadFile = File(...), db: Session = Depends(get_db)):
         # Save file
         file_content = await file.read()
         
-        uploads_dir = os.getenv("UPLOADS_PATH", "uploads")
-        if not os.path.exists(uploads_dir):
-            os.makedirs(uploads_dir)
+        if not os.path.exists(UPLOADS_DIR):
+            os.makedirs(UPLOADS_DIR)
             
-        file_path = os.path.join(uploads_dir, file.filename)
+        file_path = os.path.join(UPLOADS_DIR, file.filename)
         with open(file_path, "wb") as buffer:
             buffer.write(file_content)
         
