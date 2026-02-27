@@ -8,4 +8,3 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from backend.app.main import app
 
 # Vercel looks for the 'app' variable by default for Python functions.
-# This makes our FastAPI app available as a serverless function.
