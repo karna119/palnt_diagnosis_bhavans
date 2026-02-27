@@ -1,13 +1,12 @@
-export const runtime = 'nodejs';
+import { NextResponse } from 'next/server';
+
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-    return new Response(JSON.stringify({
+    return NextResponse.json({
         total_predictions: 1240,
         top_plant: "Tomato",
         status: "Online",
-        source: "nodejs-stats"
-    }), {
-        headers: { 'Content-Type': 'application/json' }
+        source: "standard-stats"
     });
 }
